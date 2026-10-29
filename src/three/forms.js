@@ -1,15 +1,19 @@
 import * as THREE from "three";
+import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
 
 export function box(group, mat, pos, size, rot = [0, 0, 0], bevel = 0) {
   let geometry;
-  if (bevel > 0) geometry = new THREE.BoxGeometry(size[0], size[1], size[2], 1, 1, 1);
+  if (bevel > 0) {
+    const radius = Math.min(bevel, Math.min(...size) * .45);
+    geometry = new RoundedBoxGeometry(size[0], size[1], size[2], 3, radius);
+  }
   else geometry = new THREE.BoxGeometry(...size);
   const mesh = new THREE.Mesh(geometry, mat); mesh.position.set(...pos); mesh.rotation.set(...rot); mesh.castShadow = true; mesh.receiveShadow = true; group.add(mesh); return mesh;
 }
 
 export function root(group, mat, points, radius = 0.32) {
   const curve = new THREE.CatmullRomCurve3(points.map(([x, y, z]) => new THREE.Vector3(x, y, z)));
-  const mesh = new THREE.Mesh(new THREE.TubeGeometry(curve, Math.max(12, points.length * 7), radius, 7, false), mat); mesh.castShadow = true; mesh.receiveShadow = true; group.add(mesh); return mesh;
+  const mesh = new THREE.Mesh(new THREE.TubeGeometry(curve, Math.max(18, points.length * 9), radius, 9, false), mat); mesh.castShadow = true; mesh.receiveShadow = true; group.add(mesh); return mesh;
 }
 
 export function leaf(group, mat, x, y, z, scale = 1, angle = 0) {
@@ -32,19 +36,20 @@ export function reedClump(group, mats, x, z, scale = 1) {
 }
 
 export function tree(group, mats, x, z, scale = 1, alien = false) {
-  const trunk = new THREE.Mesh(new THREE.CylinderGeometry(.18 * scale, .48 * scale, 3.7 * scale, 8, 4), mats.woodDark);
-  trunk.position.set(x, 1.83 * scale, z); trunk.rotation.z = (x % 2 ? .08 : -.12); trunk.castShadow = true; trunk.receiveShadow = true; group.add(trunk);
-  for (let j = 0; j < 3; j++) {
+  const trunk = new THREE.Mesh(new THREE.CylinderGeometry(.2 * scale, .54 * scale, 4.15 * scale, 12, 6), mats.woodDark);
+  trunk.position.set(x, 2.04 * scale, z); trunk.rotation.z = (x % 2 ? .08 : -.12); trunk.castShadow = true; trunk.receiveShadow = true; group.add(trunk);
+  for (let j = 0; j < 4; j++) {
     const a = j * Math.PI * 2 / 3 + x;
-    root(group, mats.wood, [[x, .12, z], [x + Math.cos(a) * .5 * scale, .32 * scale, z + Math.sin(a) * .5 * scale], [x + Math.cos(a) * 1.55 * scale, .06, z + Math.sin(a) * 1.55 * scale]], .16 * scale);
+    root(group, mats.wood, [[x, .12, z], [x + Math.cos(a) * .5 * scale, .32 * scale, z + Math.sin(a) * .5 * scale], [x + Math.cos(a) * 1.55 * scale, .06, z + Math.sin(a) * 1.55 * scale]], .14 * scale);
   }
-  const crown = new THREE.Group(); crown.position.set(x, 3.25 * scale, z); group.add(crown);
-  for (let k = 0; k < 6; k++) {
-    const a = k * Math.PI / 3; const length = (alien ? 2.1 : 1.6) * scale;
-    const branch = new THREE.Mesh(new THREE.CylinderGeometry(.018 * scale, .11 * scale, length, 6), mats.wood); branch.position.set(Math.cos(a) * length * .45, .55 * scale + (k % 2) * .28 * scale, Math.sin(a) * length * .45); branch.rotation.z = -Math.cos(a) * .8; branch.rotation.x = Math.sin(a) * .8; branch.castShadow = true; crown.add(branch);
-    const leafmesh = new THREE.Mesh(new THREE.SphereGeometry(1, 8, 6), k % 2 ? mats.leaf : mats.leafLight); leafmesh.scale.set(1.2 * scale, .38 * scale, .75 * scale); leafmesh.position.set(Math.cos(a) * length * .82, .8 * scale, Math.sin(a) * length * .82); leafmesh.rotation.y = a; leafmesh.castShadow = true; crown.add(leafmesh);
+  const crown = new THREE.Group(); crown.position.set(x, 3.65 * scale, z); group.add(crown);
+  for (let k = 0; k < 8; k++) {
+    const a = k * Math.PI / 4, length = (alien ? 2.5 : 2) * scale;
+    const branch = new THREE.Mesh(new THREE.CylinderGeometry(.025 * scale, .13 * scale, length, 9), mats.wood); branch.position.set(Math.cos(a) * length * .42, .45 * scale + (k % 2) * .3 * scale, Math.sin(a) * length * .42); branch.rotation.z = -Math.cos(a) * .72; branch.rotation.x = Math.sin(a) * .72; branch.castShadow = true; crown.add(branch);
+    const leafmesh = new THREE.Mesh(new THREE.SphereGeometry(1, 12, 9), k % 2 ? mats.leaf : mats.leafLight); leafmesh.scale.set(1.35 * scale, .48 * scale, .9 * scale); leafmesh.position.set(Math.cos(a) * length * .78, .78 * scale + (k % 3) * .1, Math.sin(a) * length * .78); leafmesh.rotation.y = a; leafmesh.castShadow = true; crown.add(leafmesh);
+    if (k % 2 === 0) { const leafCluster = new THREE.Mesh(new THREE.SphereGeometry(1, 10, 8), k % 4 ? mats.leafLight : mats.leaf); leafCluster.scale.set(.9 * scale, .55 * scale, .7 * scale); leafCluster.position.set(Math.cos(a) * length * .58, 1.12 * scale, Math.sin(a) * length * .58); crown.add(leafCluster); }
   }
-  if (alien) { const bulb = new THREE.Mesh(new THREE.SphereGeometry(.42 * scale, 12, 9), mats.fungus); bulb.position.set(x, 2.2 * scale, z); group.add(bulb); }
+  if (alien) { const bulb = new THREE.Mesh(new THREE.SphereGeometry(.42 * scale, 16, 12), mats.fungus); bulb.position.set(x, 4.15 * scale, z); group.add(bulb); }
 }
 
 export function lamp(group, mats, x, z, height = 3, color = 0xffbd69, intensity = 12) {

@@ -4,12 +4,13 @@ import { useState } from "react";
 import SceneViewer from "../components/SceneViewer";
 
 const scenes = [
-  { id: "ruins", number: "01", title: "Escombros", note: "Os Baixios · rua alagada" },
-  { id: "home", number: "02", title: "A casa de Kael", note: "Interior · entrada e cozinha" },
-  { id: "dinner", number: "03", title: "A mesa de jantar", note: "A mesma casa · mesa em foco" },
-  { id: "collapse", number: "04", title: "O colapso", note: "A mesma casa · pia e descanso" },
-  { id: "road", number: "05", title: "A estrada e o fragmento", note: "Floresta pantanosa · noite" },
-  { id: "metamorphosis", number: "06", title: "A metamorfose", note: "A mesma clareira · estado ambiental" }
+  { id: "ruins", number: "01", title: "O Beco", note: "Despertar · saída alagada" },
+  { id: "market", number: "02", title: "A Passarela Comercial", note: "Feira · acima do canal" },
+  { id: "home", number: "03", title: "A Casa", note: "Interior · cozinha e descanso" },
+  { id: "dinner", number: "04", title: "A Lembrança", note: "A mesma casa · mesa posta" },
+  { id: "collapse", number: "05", title: "O Colapso", note: "A mesma casa · cozinha" },
+  { id: "road", number: "06", title: "A Estrada sob a Chuva", note: "Números · caminho à clareira" },
+  { id: "metamorphosis", number: "07", title: "A Clareira", note: "O Bulbo e as torres" }
 ];
 
 export default function Page() {
@@ -24,8 +25,8 @@ export default function Page() {
     </header>
 
     <section className="intro" id="inicio">
-      <div><p className="eyebrow">BREJO-MUNDO / CADERNO DE CENÁRIOS</p><h1>Um mundo que <em>respira</em> sob a névoa.</h1>
-        <p className="lede">Seis recortes do prólogo. Um planeta vivo, construído sobre água escura, madeira reaproveitada e raízes antigas.</p></div>
+      <div><p className="eyebrow">BREJO-MUNDO / PRÓLOGO JOGÁVEL</p><h1>Um mundo que <em>respira</em> sob a névoa.</h1>
+        <p className="lede">Explore os Baixios. Observe, converse e siga as pistas. Use WASD para andar, mouse para olhar e E para interagir.</p></div>
       <div className="world-stamp"><span>LOCALIZAÇÃO</span><b>OS BAIXIOS</b><small>PLANETA BREJO-MUNDO</small></div>
     </section>
 
@@ -36,12 +37,12 @@ export default function Page() {
     </nav>
 
     <section className="stage-wrap">
-      <div className="stage-heading"><div><span className="eyebrow">CENA {scene.number} / 06</span><h2>{scene.title}</h2></div>
+      <div className="stage-heading"><div><span className="eyebrow">CENA {scene.number} / 07</span><h2>{scene.title}</h2></div>
         {active === "metamorphosis" ? <button className="state-toggle" onClick={() => setAwakened((value) => !value)}><span className={awakened ? "toggle-light on" : "toggle-light"}/>{awakened ? "MANIFESTAÇÃO" : "ANTES DO FRAGMENTO"}</button> : <span className="inspect-label">↔ ARRASTE PARA INSPECIONAR</span>}
       </div>
-      <SceneViewer sceneId={active} awakened={awakened}/>
+      <SceneViewer sceneId={active} awakened={awakened} onTravel={setActive}/>
       <div className="stage-caption"><span><i className="caption-dot"/> {active === "metamorphosis" && awakened ? "LUZ AMBIENTAL · RUBRO" : "AMBIENTE · INSPEÇÃO LIVRE"}</span><span>WEBGL / THREE.JS <i>·</i> 3D</span></div>
     </section>
-    <footer className="footer"><span>O CORAÇÃO DE SANGUE <i>—</i> DESENVOLVIMENTO DE AMBIENTES</span><span>BREJO-MUNDO <b>●</b> 06 CENÁRIOS</span></footer>
+    <footer className="footer"><span>O CORAÇÃO DE SANGUE <i>—</i> DESENVOLVIMENTO DE AMBIENTES</span><span>BREJO-MUNDO <b>●</b> 07 CENÁRIOS</span></footer>
   </main>;
 }

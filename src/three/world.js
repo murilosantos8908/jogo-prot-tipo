@@ -21,11 +21,11 @@ export function swampBanks(group, mats, x, z, span = 3) {
 }
 
 export function fungusPatch(group, mats, x, z, count = 18, spread = 8) {
-  const cap = new THREE.ConeGeometry(.12, .16, 7); cap.translate(0, .13, 0);
+  const cap = new THREE.ConeGeometry(.12, .16, 9); cap.translate(0, .08, 0);
   const stem = new THREE.CylinderGeometry(.035, .055, .12, 6); stem.translate(0, .06, 0);
   const caps = new THREE.InstancedMesh(cap, mats.fungus, count); const stems = new THREE.InstancedMesh(stem, mats.bone, count);
   const dummy = new THREE.Object3D();
-  for (let i = 0; i < count; i++) { const a = i * 2.399, r = .45 + ((i * 17) % 100) / 100 * spread; const px = x + Math.cos(a) * r, pz = z + Math.sin(a) * r; const s = .65 + ((i * 31) % 60) / 100; dummy.position.set(px, .02, pz); dummy.scale.setScalar(s); dummy.rotation.y = a; dummy.updateMatrix(); caps.setMatrixAt(i, dummy.matrix); stems.setMatrixAt(i, dummy.matrix); }
+  for (let i = 0; i < count; i++) { const a = i * 2.399, r = .45 + ((i * 17) % 100) / 100 * spread; const px = x + Math.cos(a) * r, pz = z + Math.sin(a) * r; const s = .65 + ((i * 31) % 60) / 100; dummy.position.set(px, 0, pz); dummy.scale.setScalar(s); dummy.rotation.y = a; dummy.updateMatrix(); caps.setMatrixAt(i, dummy.matrix); stems.setMatrixAt(i, dummy.matrix); }
   caps.castShadow = false; stems.castShadow = false; group.add(stems, caps);
 }
 
@@ -40,6 +40,10 @@ export function bulboTree(group, mats, x, z) {
 }
 
 export function swampVegetation(group, mats, side = 1, start = -12, end = 18) {
-  for (let z = start; z <= end; z += 5) { const x = side * (7.5 + (Math.sin(z * 1.7) + 1) * 2); tree(group, mats, x, z, 1 + ((z + 20) % 3) * .15, true); }
-  for (let i = 0; i < 14; i++) { const x = side * (5.5 + (i % 4) * .65), z = start + i * ((end - start) / 14); reedClump(group, mats, x, z, .8 + (i % 3) * .2); if (i % 3 === 0) leaf(group, mats.leafLight, x - .4, .2, z + .5, .7, i); }
+  for (let z = start; z <= end; z += 3.8) {
+    const x = side * (7.2 + (Math.sin(z * 1.7) + 1) * 1.8);
+    tree(group, mats, x, z, 1.2 + (Math.abs(Math.floor(z)) % 3) * .12, true);
+    if (Math.floor(z) % 2 === 0) tree(group, mats, side * 17.1, z + 1.7, .95, false);
+  }
+  for (let i = 0; i < 24; i++) { const x = side * (5.2 + (i % 5) * .6), z = start + i * ((end - start) / 24); reedClump(group, mats, x, z, .85 + (i % 3) * .22); if (i % 3 === 0) leaf(group, mats.leafLight, x - side * .4, .12, z + .5, .72, i); }
 }

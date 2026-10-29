@@ -1,7 +1,8 @@
 import * as THREE from "three";
 import { makeMaterials, addGround } from "../../three/materials";
 import { box, leaf, root, tree } from "../../three/forms";
-import { addClothLine, addCrateStack, addFern, addForestFloorPatch, addMushroomCluster, addWaterEdgePlants, buildForestMarketStall, seededNoise } from "../../three/forestKit";
+import { addMossyAlleyWalls } from "../../three/alleyWalls";
+import { addClothLine, addCrateStack, addFern, addVineCurtain, addForestFloorPatch, addMushroomCluster, addWaterEdgePlants, buildForestMarketStall, seededNoise } from "../../three/forestKit";
 
 function addFavelaBackdrop(group, mats) {
   // Stacked homes climb above the market wall, closing the distant view with the district.
@@ -39,30 +40,6 @@ function addFavelaBackdrop(group, mats) {
     const side = i % 2 ? 1 : -1, x = side * (19 + (i % 5) * 2.3), z = -25 + (i * 9 % 49);
     const tree = new THREE.Mesh(new THREE.ConeGeometry(1.8 + (i % 3) * .4, 5 + (i % 4) * .8, 7), i % 2 ? mats.leaf : mats.leafLight);
     tree.position.set(x, 7.2 + (i % 3) * 1.2, z); tree.rotation.z = side * .12; group.add(tree);
-  }
-}
-
-function addMarketWall(group, mats, side) {
-  const x = side * 15.6;
-  for (let section = 0; section < 14; section++) {
-    const z = -25 + section * 3.75;
-    const height = 6.6 + (section % 3) * .25;
-    box(group, mats.alleyStone, [x, height / 2, z], [1.15, height, 3.9]);
-    for (let row = 0; row < 8; row++) for (let brick = 0; brick < 3; brick++) {
-      const bz = z - 1.24 + brick * 1.23 + (row % 2) * .22;
-      box(group, (section + row + brick) % 5 ? mats.alleyStone : mats.alleyStoneLight,
-        [x - side * .6, .4 + row * .75, bz], [.1, .64, 1.1], [0, 0, (brick % 2 ? 1 : -1) * .015]);
-    }
-    box(group, mats.alleyStoneDark, [x, height + .12, z], [1.38, .24, 4.05]);
-    for (let patch = 0; patch < 5; patch++) {
-      const moss = new THREE.Mesh(new THREE.DodecahedronGeometry(1, 1), patch % 2 ? mats.mossDeep : mats.moss);
-      moss.position.set(x - side * .68, .35 + ((section * 13 + patch * 9) % 49) / 10, z - 1.35 + ((section * 7 + patch * 11) % 29) / 10);
-      moss.scale.set(.09, .25 + (patch % 3) * .12, .32 + (patch % 4) * .12); moss.rotation.y = section + patch; group.add(moss);
-    }
-    if (section % 2 === 0) {
-      root(group, mats.woodDark, [[x - side * .63, 5.8, z - .5], [x - side * .72, 3.6, z + .15], [x - side * .65, .5, z + .4]], .035);
-      for (let leafIndex = 0; leafIndex < 5; leafIndex++) leaf(group, mats.leaf, x - side * .7, .8 + leafIndex * .72, z + .15, .26, section + leafIndex);
-    }
   }
 }
 
@@ -112,6 +89,32 @@ function addMarketArch(group, mats, z, seed) {
   arch.position.z = z; group.add(arch);
 }
 
+function addWovenMarketPanel(group, mats, x, z, side, seed) {
+  const panel = new THREE.Mesh(new THREE.PlaneGeometry(1.05, .88), new THREE.MeshStandardMaterial({
+    color: seed % 2 ? 0x8e5639 : 0x9c7540,
+    roughness: .96,
+    side: THREE.DoubleSide
+  }));
+  panel.position.set(x - side * .035, 2.62, z);
+  panel.rotation.y = -side * Math.PI / 2;
+  panel.castShadow = true; group.add(panel);
+  // Repeated lozenges and cross-bands suggest locally woven plant-fiber craft.
+  const motifColors = [mats.clothOchre, mats.stallRed, mats.stallTeal];
+  for (let row = 0; row < 3; row++) for (let column = 0; column < 5; column++) {
+    const shape = new THREE.Shape();
+    shape.moveTo(0, .12); shape.lineTo(.085, 0); shape.lineTo(0, -.12); shape.lineTo(-.085, 0); shape.closePath();
+    const motifIndex = ((row + column + seed) % motifColors.length + motifColors.length) % motifColors.length;
+    const diamond = new THREE.Mesh(new THREE.ShapeGeometry(shape), motifColors[motifIndex]);
+    diamond.position.set(x - side * .07, 2.62 + (row - 1) * .23, z + (column - 2) * .18);
+    diamond.rotation.y = -side * Math.PI / 2;
+    diamond.castShadow = true; group.add(diamond);
+  }
+  for (let edge = -1; edge <= 1; edge += 2) {
+    const braid = new THREE.Mesh(new THREE.TorusGeometry(.055, .012, 5, 12), mats.woodEdge);
+    braid.position.set(x - side * .08, 2.62 + edge * .38, z); braid.rotation.y = -side * Math.PI / 2; group.add(braid);
+  }
+}
+
 export function buildMarketEnvironment() {
   const group = new THREE.Group(), mats = makeMaterials();
   group.fog = new THREE.FogExp2(0x394438, .014);
@@ -119,8 +122,14 @@ export function buildMarketEnvironment() {
   const floorPos = floor.geometry.attributes.position;
   for (let i = 0; i < floorPos.count; i++) floorPos.setY(i, 0);
   floorPos.needsUpdate = true; floor.geometry.computeVertexNormals();
-  addMarketWall(group, mats, -1); addMarketWall(group, mats, 1);
+  addMossyAlleyWalls(group, mats, { width: 31.2, depth: 52, height: 7.2, thickness: 1.15, seed: 711, ends: false, vines: true });
   addFavelaBackdrop(group, mats);
+  for (let side of [-1, 1]) for (let i = 0; i < 7; i++) {
+    const z = -21 + i * 7;
+    tree(group, mats, side * (12.9 + (i % 2) * .55), z, 1.08 + (i % 3) * .1, i % 3 === 0);
+    addVineCurtain(group, mats, side * 14.7, z + 2, 5.7, 7, i + side * 610, -side * 1.5);
+    for (let rootIndex = 0; rootIndex < 4; rootIndex++) root(group, mats.woodDark, [[side * 14.2, .08, z], [side * 12.8, .35, z + rootIndex * .36], [side * 11.4, .06, z + .6], [side * 10.2, .02, z + .9]], .09);
+  }
   // At either end, timber lintels and weathered signs make the market read as a lived-in lane.
   for (const z of [-25.6, 25.6]) {
     box(group, mats.alleyStone, [0, 3.1, z], [31.5, 6.2, .9]);
@@ -138,6 +147,7 @@ export function buildMarketEnvironment() {
   for (let side of [-1, 1]) for (let i = 0; i < 7; i++) {
     const z = -21 + i * 7, x = side * (8.65 + (i % 2) * .45);
     buildForestMarketStall(group, mats, { x, z, width: 4.5, depth: 4, deckY: .06, style: (i + (side > 0 ? 1 : 0)) % 3, seed: i * 23 + side * 31, produce: true });
+    addWovenMarketPanel(group, mats, x - side * 2.28, z, side, i + side * 19);
     // Back wall panels, fabric valances and hanging produce fill out each stall.
     for (let panel = 0; panel < 4; panel++) {
       const clothMat = [mats.stallCloth, mats.stallRed, mats.stallTeal][(panel + i) % 3];

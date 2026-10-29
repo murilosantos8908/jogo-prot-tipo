@@ -3,13 +3,16 @@ import { makeMaterials, addGround } from "../../three/materials";
 import { box, lamp, leaf, puddle, reedClump, root, tree } from "../../three/forms";
 import { addFog, bulboTree, fungusPatch, swampVegetation } from "../../three/world";
 import { addCanopyBridge, addClothLine, addCrateStack, addForestBoundary, addForestFloorPatch, addGroundDebris, addLampCluster, addMushroomCluster, addRaindropRipples, addRootsAcrossPath, addSwampGrassIsland, addTrashCan } from "../../three/forestKit";
+import { addMossyAlleyWalls } from "../../three/alleyWalls";
 
 export function buildRoad(awakened = false) {
   const group = new THREE.Group(), mats = makeMaterials();
-  const floor = addGround(group, mats, 38, 52), floorY = floor.geometry.attributes.position;
+  const floor = addGround(group, mats, 48, 58), floorY = floor.geometry.attributes.position;
   for (let i = 0; i < floorY.count; i++) floorY.setY(i, 0); floorY.needsUpdate = true; floor.geometry.computeVertexNormals();
   addFog(group, awakened ? 0x49383a : 0x34483b, awakened ? .021 : .019);
   addForestBoundary(group, mats, { width: 40, depth: 56, sideSpacing: 3, endSpacing: 2.8, inset: 1.5, seed: 955, vines: true });
+  // Scenes 7 and 8 share this build: enclosing masonry closes the road on both versions.
+  addMossyAlleyWalls(group, mats, { width: 46, depth: 58, height: 9.5, thickness: 1.25, sectionLength: 4.2, seed: 955, ends: true, vines: true });
   // Shared winding raised road and its surrounding open encounter clearing.
   for (let i = 0; i < 11; i++) {
     const z = 22 - i * 4.5, x = Math.sin(z * .16) * .8;
@@ -113,7 +116,7 @@ export function buildRoad(awakened = false) {
     const tower = new THREE.Mesh(new THREE.BoxGeometry(1.1, h, 1), mats.woodDark); tower.position.set(x, h / 2, z); group.add(tower);
     const glow = new THREE.Mesh(new THREE.BoxGeometry(.08, .12, .035), mats.amber); glow.position.set(x - .18, h * .65, z + .52); group.add(glow);
   }
-  bulboTree(group, mats, -13, -30);
+  bulboTree(group, mats, -13, -24);
   for (let i = 0; i < 8; i++) reedClump(group, mats, -8 + i * 2.4, -19 - (i % 3) * 2, .9);
   fungusPatch(group, mats, -7, -7, 36, 4); fungusPatch(group, mats, 7, -10, 30, 3.4);
   // The red source is an environmental preview point only; no fragment object is placed.

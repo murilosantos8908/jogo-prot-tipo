@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { makeMaterials } from "../../three/materials";
 import { box, leaf, root, tree } from "../../three/forms";
+import { addMossyAlleyWalls } from "../../three/alleyWalls";
 
 function addPlatformHouse(group, mats, platform, index) {
   const { x, y, z, width, depth } = platform;
@@ -53,10 +54,36 @@ function addPursuer(group, mats, x, z, seed) {
 }
 
 export function buildMarketEscape() {
-  const group = new THREE.Group(), mats = makeMaterials();
+  const group = new THREE.Group(), mats = makeMaterials({ toxicWater: true });
   group.fog = new THREE.FogExp2(0x42513c, .012);
-  const background = new THREE.Mesh(new THREE.PlaneGeometry(120, 120), mats.mud);
-  background.rotation.x = -Math.PI / 2; background.position.set(0, -8.4, 0); group.add(background);
+  const waterLevel = -1.48;
+  const toxicTexture = mats.toxicWater.map;
+  toxicTexture.repeat.set(13, 13);
+  const toxicSurface = new THREE.Mesh(new THREE.PlaneGeometry(130, 130), mats.toxicWater);
+  toxicSurface.rotation.x = -Math.PI / 2; toxicSurface.position.y = waterLevel; toxicSurface.receiveShadow = true; group.add(toxicSurface);
+  addMossyAlleyWalls(group, mats, { width: 50, depth: 60, height: 12, thickness: 1.25, sectionLength: 4, seed: 318, ends: true, vines: true });
+  // Oil slicks, bubbles and scum rings make the low ground read as polluted water.
+  const slickMaterial = new THREE.MeshPhysicalMaterial({ color: 0x9eaa52, roughness: .2, metalness: .28, clearcoat: .9, transparent: true, opacity: .46, side: THREE.DoubleSide });
+  const foamMaterial = new THREE.MeshStandardMaterial({ color: 0xb0ad74, roughness: .45, transparent: true, opacity: .62, emissive: 0x32391b, emissiveIntensity: .24 });
+  const waterDetails = [];
+  for (let i = 0; i < 34; i++) {
+    const angle = i * 2.399, radius = 3 + (i * 17 % 230) / 10;
+    const x = Math.cos(angle) * radius, z = Math.sin(angle) * radius;
+    const slick = new THREE.Mesh(new THREE.CircleGeometry(.42 + (i % 5) * .16, 20), slickMaterial);
+    slick.rotation.x = -Math.PI / 2; slick.rotation.z = angle; slick.position.set(x, waterLevel + .025 + (i % 3) * .002, z);
+    slick.scale.set(1.4 + (i % 3) * .3, .48 + (i % 4) * .14, 1); group.add(slick);
+    if (i % 2 === 0) {
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(.18 + (i % 4) * .07, .012, 5, 18), foamMaterial);
+      ring.rotation.x = -Math.PI / 2; ring.position.set(x + .28, waterLevel + .04, z - .12); group.add(ring);
+    }
+  }
+  for (let i = 0; i < 22; i++) {
+    const angle = i * 2.17, radius = 2 + (i * 19 % 250) / 10;
+    const bubble = new THREE.Mesh(new THREE.SphereGeometry(.12 + (i % 4) * .055, 9, 7), foamMaterial);
+    const baseY = waterLevel + .12 + (i % 4) * .045;
+    bubble.position.set(Math.cos(angle) * radius, baseY, Math.sin(angle) * radius);
+    bubble.scale.set(1.4, .45, 1); group.add(bubble); waterDetails.push({ mesh: bubble, baseY, phase: i * 1.7 });
+  }
 
   // A staggered sequence of roofs turns the steep favela into the parkour course.
   const route = [
@@ -83,9 +110,28 @@ export function buildMarketEscape() {
     box(group, [mats.woodDark, mats.alleyStoneDark, mats.stallTeal, mats.wood][(i + row) % 4],
       [x, row * 2.3 + height / 2, z], [width, height, 3.8], [0, 0, (i % 2 ? -.025 : .025)]);
     box(group, mats.rust, [x, row * 2.3 + height + .08, z], [width + .3, .16, 4.05]);
+    for (let window = 0; window < 2; window++) {
+      const windowZ = z - .82 + window * 1.64, windowY = row * 2.3 + 1.55;
+      box(group, mats.woodDark, [x - side * (width / 2 + .06), windowY, windowZ], [.11, .78, .66]);
+      box(group, (i + window) % 3 ? mats.glass : mats.stallCloth,
+        [x - side * (width / 2 + .13), windowY, windowZ], [.035, .58, .44]);
+      box(group, mats.woodEdge, [x - side * (width / 2 + .16), windowY + .4, windowZ], [.08, .08, .76]);
+    }
+    box(group, mats.woodDark, [x - side * (width / 2 + .08), row * 2.3 + .93, z + .82], [.14, 1.7, .7]);
+    for (let plank = 0; plank < 5; plank++) {
+      const siding = new THREE.Mesh(new THREE.BoxGeometry(.035, .08, 3.65), plank % 2 ? mats.woodEdge : mats.woodDark);
+      siding.position.set(x - side * (width / 2 + .075), row * 2.3 + .35 + plank * .46, z); group.add(siding);
+    }
     if ((i + row) % 2 === 0) {
-      const vines = new THREE.Mesh(new THREE.ConeGeometry(.4, 1.8, 7), mats.leaf);
-      vines.position.set(x + side * 1.1, row * 2.3 + .7, z + 1.2); vines.rotation.z = side * .4; group.add(vines);
+      const vineX = x - side * (width / 2 + .13);
+      root(group, mats.woodDark, [[vineX, row * 2.3 + height, z - 1.25], [vineX - side * .12, row * 2.3 + 1.65, z - .9], [vineX - side * .05, row * 2.3 + .25, z - .55]], .035);
+      for (let leafIndex = 0; leafIndex < 5; leafIndex++) leaf(group, leafIndex % 2 ? mats.leaf : mats.moss,
+        vineX - side * .08, row * 2.3 + .5 + leafIndex * .46, z - .7, .25, i + leafIndex);
+      for (let garden = 0; garden < 4; garden++) {
+        const crown = new THREE.Mesh(new THREE.SphereGeometry(.34 + (garden % 2) * .1, 9, 7), garden % 2 ? mats.leaf : mats.moss);
+        crown.position.set(x - width * .34 + garden * width * .22, row * 2.3 + height + .34, z + 1.35);
+        crown.scale.set(1.1, .5, .85); group.add(crown);
+      }
     }
   }
   // Root bridges, hanging lines, and giant wet leaves sell the swallowed skyline.
@@ -113,6 +159,12 @@ export function buildMarketEscape() {
     spawn: [0, platforms[0].y, 19],
     camera: { position: [0, 6, 24], target: [0, 2, 8], minDistance: 7, maxDistance: 35 },
     update: (time, dt, playerPosition) => {
+      toxicTexture.offset.x = (toxicTexture.offset.x + dt * .004) % 1;
+      toxicTexture.offset.y = (toxicTexture.offset.y - dt * .0025 + 1) % 1;
+      waterDetails.forEach(({ mesh, baseY, phase }) => {
+        mesh.position.y = baseY + Math.sin(time * 1.6 + phase) * .045;
+        mesh.scale.x = 1.4 + Math.sin(time * 1.2 + phase) * .18;
+      });
       pursuers.forEach((pursuer, i) => {
         const desiredZ = playerPosition.z + 3.2 + i * 1.1;
         const desiredX = playerPosition.x * .35 + (i - 1) * 1.1;

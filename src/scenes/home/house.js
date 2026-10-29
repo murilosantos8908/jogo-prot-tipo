@@ -1,6 +1,8 @@
 import * as THREE from "three";
 import { makeMaterials } from "../../three/materials";
 import { box, lamp, leaf, puddle, reedClump, root } from "../../three/forms";
+import { fungusPatch } from "../../three/world";
+import { addMushroomCluster } from "../../three/forestKit";
 
 function latheMesh(profile, material, segments = 24) {
   const points = profile.map(([radius, height]) => new THREE.Vector2(radius, height));
@@ -100,6 +102,16 @@ export function buildHouse(group, mats) {
     const undergrowth = new THREE.Group(); reedClump(undergrowth, mats, 0, 0, .62); undergrowth.position.set(x, .01, z); group.add(undergrowth);
   }
   for (let i = 0; i < 5; i++) root(group, mats.wood, [[-5.7, .05, -3.7 + i * 1.5], [-5.42, .22, -3.1 + i * 1.35], [-5.75, .48 + i % 2 * .2, -2.5 + i * 1.1]], .045);
+  // Bioluminescent fungi creep across the wet threshold and the abandoned corners.
+  for (const [x, z, seed] of [[-5.1, -3.8, 241], [5.1, -3.5, 257], [-5.15, 3.8, 271], [5.05, 3.7, 283]]) {
+    fungusPatch(group, mats, x, z, 18, 1.35);
+    addMushroomCluster(group, mats, x + (x > 0 ? -.35 : .35), z, 7, .38, seed);
+  }
+  for (let i = 0; i < 7; i++) {
+    const x = -4.8 + i * 1.55;
+    const growth = new THREE.Mesh(new THREE.DodecahedronGeometry(1, 1), i % 2 ? mats.moss : mats.fungus);
+    growth.position.set(x, .12 + (i % 3) * .1, -4.12); growth.scale.set(.2, .12 + (i % 2) * .1, .1); group.add(growth);
+  }
   // resting space in the side alcove
   box(group, mats.woodDark, [4.85, .42, .4], [1.6, .5, 2.7], [0, 0, 0], .04); box(group, mats.cloth, [4.85, .72, .4], [1.7, .18, 2.75], [0, 0, 0], .035);
   box(group, mats.clothOchre, [4.85, .85, .95], [1.65, .14, 1.15]);

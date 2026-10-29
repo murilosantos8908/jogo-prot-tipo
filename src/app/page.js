@@ -5,12 +5,13 @@ import SceneViewer from "../components/SceneViewer";
 
 const scenes = [
   { id: "ruins", number: "01", title: "O Beco", note: "Despertar · saída alagada" },
-  { id: "market", number: "02", title: "A Passarela Comercial", note: "Feira · acima do canal" },
-  { id: "home", number: "03", title: "A Casa", note: "Interior · cozinha e descanso" },
-  { id: "dinner", number: "04", title: "A Lembrança", note: "A mesma casa · mesa posta" },
-  { id: "collapse", number: "05", title: "O Colapso", note: "A mesma casa · cozinha" },
-  { id: "road", number: "06", title: "A Estrada sob a Chuva", note: "Números · caminho à clareira" },
-  { id: "metamorphosis", number: "07", title: "A Clareira", note: "O Bulbo e as torres" }
+  { id: "market", number: "02", title: "A Feira dos Baixios", note: "Barracas · gente e viela �mida" },
+  { id: "parkour", number: "03", title: "Fuga pelos Telhados", note: "Parkour · escape dos vendedores" },
+  { id: "home", number: "04", title: "A Casa", note: "Interior · cozinha e descanso" },
+  { id: "dinner", number: "05", title: "A Lembrança", note: "A mesma casa · mesa posta" },
+  { id: "collapse", number: "06", title: "O Colapso", note: "A mesma casa · cozinha" },
+  { id: "road", number: "07", title: "A Estrada sob a Chuva", note: "Números · caminho à clareira" },
+  { id: "metamorphosis", number: "08", title: "A Clareira", note: "O Bulbo e as torres" }
 ];
 
 export default function Page() {
@@ -37,12 +38,12 @@ export default function Page() {
     </nav>
 
     <section className="stage-wrap">
-      <div className="stage-heading"><div><span className="eyebrow">CENA {scene.number} / 07</span><h2>{scene.title}</h2></div>
+      <div className="stage-heading"><div><span className="eyebrow">CENA {scene.number} / 08</span><h2>{scene.title}</h2></div>
         {active === "metamorphosis" ? <button className="state-toggle" onClick={() => setAwakened((value) => !value)}><span className={awakened ? "toggle-light on" : "toggle-light"}/>{awakened ? "MANIFESTAÇÃO" : "ANTES DO FRAGMENTO"}</button> : <span className="inspect-label">↔ ARRASTE PARA INSPECIONAR</span>}
       </div>
       <SceneViewer sceneId={active} awakened={awakened} onTravel={setActive}/>
       <div className="stage-caption"><span><i className="caption-dot"/> {active === "metamorphosis" && awakened ? "LUZ AMBIENTAL · RUBRO" : "AMBIENTE · INSPEÇÃO LIVRE"}</span><span>WEBGL / THREE.JS <i>·</i> 3D</span></div>
     </section>
-    <footer className="footer"><span>O CORAÇÃO DE SANGUE <i>—</i> DESENVOLVIMENTO DE AMBIENTES</span><span>BREJO-MUNDO <b>●</b> 07 CENÁRIOS</span></footer>
+    <footer className="footer"><span>O CORAÇÃO DE SANGUE <i>—</i> DESENVOLVIMENTO DE AMBIENTES</span><span>BREJO-MUNDO <b>●</b> 08 CENÁRIOS</span></footer>
   </main>;
 }
